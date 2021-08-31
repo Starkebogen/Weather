@@ -1,0 +1,9 @@
+[
+  {"Place": "Bengeo",        "Latitude": 51.810940, "Longitude":   -0.085990, "Language": "en"},
+  {"Place": "Kesten",        "Latitude": 49.913872, "Longitude":    7.001304, "Language": "en"},
+  {"Place": "London",        "Latitude": 51.507351, "Longitude":   -0.127758, "Language": "en"},
+  {"Place": "Nashville",     "Latitude": 36.174665, "Longitude":  -86.767960, "Language": "en"},
+  {"Place": "Neumagen",      "Latitude": 49.853830, "Longitude":    6.895120, "Language": "en"},
+  {"Place": "Pershore",      "Latitude": 52.114260, "Longitude":   -2.080570, "Language": "en"},
+  {"Place": "White Waltham", "Latitude": 51.488270, "Longitude":   -0.778420, "Language": "en"}
+]
