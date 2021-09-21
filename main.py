@@ -8,8 +8,8 @@ Description        Generates an hourly weather forecast for the next 48 hours an
 Background         Inspired by the Day 35 exercise in Doctor Angela Yu's excellent Python course "100 Days of Code -
                    The Complete Python Pro Bootcamp for 2021", which is available on www.udemy.com.  The difference
                    between this program and the course exercise is that this program produces daily and hourly weather
-                   reports for several locations, whereas the course exercise sends a single SMS alert advising whether
-                   rain (or snow) is expected within the next twelve hours for a single location.
+                   reports for multiple locations, whereas the course exercise sends a single SMS alert advising whether
+                   inclement weather (i.e. rain or snow) is expected within the next twelve hours for a single location.
 
 Author             Max Parry
 
@@ -18,18 +18,19 @@ Date               14 March 2021
 Notes              The forecast data is retrieved from the website www.openweathermap.org via that site's api
 
                    Date and time processing is not straightforward because we are dealing with several time zones and
-                   date/time formats:  All api dates and times are in UTC time in seconds since 1/1/1970 (UNIX format);
-                   System time is in CET (CEST when summer time is in effect);  All output dates and times are in the
-                   local time of the location being reported on.  Comments and variable names in the program use the
-                   term "location time" when referring to the local time of the location being processed and "system
-                   time" when referring to the time of the computer clock.  N.B. UTC does NOT change when Summer Time
-                   is in effect.  Summer Time is reflected in timezone_offset returned by the api.
+                   date/time formats:  All api dates and times are in UTC (GMT) in seconds since 1/1/1970 (UNIX format);
+                   System time is in CET (CEST when summer time / dalight saving time is in effect);  All output dates 
+                   and times are in the local time of the location being reported on.  Comments and variable names
+                   in the program use the term "location time" when referring to the local time of the location being 
+                   processed and "system time" when referring to the time of the computer clock.  N.B. UTC does NOT 
+                   change when Summer Time is in effect.  Summer Time is reflected in timezone_offset returned by the 
+                   api.
 
-Portability        The program was written for the author's personal use.  It uses the author's openweathermap account,
-                   relies on system time being in the author's time zone normal (CET/CEST) and reports on locations
-                   selected by the author.
+Portability and    The program was written for the author's personal use.  It uses the author's openweathermap account,
+Deployment         relies on system time being in the author's time zone (CET/CEST) and reports on locations selected by 
+                   the author.
 
-                   Users other than the author should ensure these points are addressed:
+                   Users other than the author should address these points:
 
                        1) An openweathermap.org api account is required.  The api key of the account should be stored 
                           in a text file named "api_key.txt" in the same folder as the source code file "main.py"
@@ -38,22 +39,24 @@ Portability        The program was written for the author's personal use.  It us
                           the same folder as the source code file "main.py"
 
                        3) The variable SYSTEM_TIME_UTC_OFFSET should contain the difference between system time and UTC
+                          in seconds
 
-Amendment History  15 March 2021 Wind speed reported in kilometres per hour (kph) rather than metres per second
-                   16 March 2021 Index j changed to i in "for j in range(0, HOURS)" and "for j in range(0, DAYS)"
-                   29 March 2021 Handling of summer time (DST) simplified by using tm_isdst
-                   30 March 2021 The user id for the openweathermap.org account moved from the source code to the file
-                                 "api_key.txt" and containing variable name changed from API_ID to api_key
-                    3 May 2021   Kesten added to locations()
-                    4 May 2021   Tuple LOCATIONS changed to a list and renamed locations as a precursor to holding
-                                 location data in a file
-                    6 May 2021   Daily report output amended to put prevailing conditions and wind speed on the same
-                                 line, thus enabling report to fit on a single page
-                   20 May 2021   Data of the location(s) moved to an external json file from where it is loaded into
-                                 the list locations
-                   21 May 2021   Comments tidied
-                    1 June 2021  File name addedd to Description comment
-                    6 June 2021  Elapsed execution time reported
+Amendment History  15 March 2021     Wind speed reported in kilometres per hour (kph) rather than metres per second
+                   16 March 2021     Index j changed to i in "for j in range(0, HOURS)" and "for j in range(0, DAYS)"
+                   29 March 2021     Handling of summer time (DST) simplified by using tm_isdst
+                   30 March 2021     The user id for the openweathermap.org account moved from the source code to the 
+                                     file "api_key.txt" and containing variable name changed from API_ID to api_key
+                    3 May 2021       Kesten added to locations()
+                    4 May 2021       Tuple LOCATIONS changed to a list and renamed locations as a precursor to holding
+                                     location data in a file
+                    6 May 2021       Daily report output amended to put prevailing conditions and wind speed on the same
+                                     line, thus enabling report to fit on a single page
+                   20 May 2021       Data of the location(s) moved to an external json file from where it is loaded into
+                                     the list locations
+                   21 May 2021       Comments tidied
+                    1 June 2021      File name addedd to Description comment
+                    6 June 2021      Elapsed execution time reported
+                   21 September 2021 Comments tidied and improved
 
 ====================================================================================================================="""
 import requests
@@ -130,7 +133,7 @@ for location in locations:
         f.write(f"(UTC Offset: {round(api_data['timezone_offset'] / 3600)} {UTC_hours_literal})\n\n")       # UTC Offset
 
         # Starting/default values for file/report summary
-        rain_or_snow_predicted = False                                # When we start we assume no rain or snow expected
+        rain_or_snow_predicted = False                               # When we start we assume no precipitation expected
         min_temp = api_data["hourly"][0]["temp"]  # Start with the minimum temperature set to the first hour temperature
         max_temp = api_data["hourly"][0]["temp"]  # Start with the maximum temperature set to the first hour temperature
 
@@ -153,7 +156,7 @@ for location in locations:
 
             # Update report summary if necessary
             if int(api_data["hourly"][i]["weather"][0]["id"]) < 700:   # Below 700 indicates rain (or snow) of some type
-                rain_or_snow_predicted = True                    # We've changed our mind:  rain (or snow) now predicted
+                rain_or_snow_predicted = True                     # We've changed our mind:  precipitation now predicted
 
             # If necessary, adjust minimum and maxim temperatures for summary
             if api_data["hourly"][i]["temp"] < min_temp:                         # If there is a new minimum temperature
