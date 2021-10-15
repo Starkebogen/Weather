@@ -8,8 +8,8 @@ Description        Generates an hourly weather forecast for the next 48 hours an
 Background         Inspired by the Day 35 exercise in Doctor Angela Yu's excellent Python course "100 Days of Code -
                    The Complete Python Pro Bootcamp for 2021", which is available on www.udemy.com.  The difference
                    between this program and the course exercise is that this program produces daily and hourly weather
-                   reports for multiple locations, whereas the course exercise sends a single SMS alert advising whether
-                   inclement weather (i.e. rain or snow) is expected within the next twelve hours for a single location.
+                   reports for multiple locations, whereas the course exercise operates on a single location, sending 
+                   an SMS alert advising if rain or snow is predicted within the next twelve hours.
 
 Author             Max Parry
 
@@ -19,7 +19,7 @@ Notes              The forecast data is retrieved from the website www.openweath
 
                    Date and time processing is not straightforward because we are dealing with several time zones and
                    date/time formats:  All api dates and times are in UTC (GMT) in seconds since 1/1/1970 (UNIX format);
-                   System time is in CET (CEST when summer time / dalight saving time is in effect);  All output dates 
+                   System time is in CET (CEST when summer time / daylight saving time is in effect);  All output dates 
                    and times are in the local time of the location being reported on.  Comments and variable names
                    in the program use the term "location time" when referring to the local time of the location being 
                    processed and "system time" when referring to the time of the computer clock.  N.B. UTC does NOT 
@@ -57,6 +57,11 @@ Amendment History  15 March 2021     Wind speed reported in kilometres per hour 
                     1 June 2021      File name addedd to Description comment
                     6 June 2021      Elapsed execution time reported
                    21 September 2021 Comments tidied and improved
+                   24 September 2021 Summertime / Daylight Saving Time logic (adjustment of SYSTEM_TIME_UTC_OFFSET) 
+                                     moved to immediately after initial assignment of constants
+                    3 October 2021   Background comments improved
+                    6 October 2021   Background comments improved again
+                   15 October 2021   Start and finish time reported and precision of reported elapsed time amended
 
 ====================================================================================================================="""
 import requests
@@ -64,18 +69,25 @@ from datetime import *
 import time
 import json
 
-# Tell the world what we are about to start and record the start time
-print()                                                                                   # blank line before any output
-print("***** Weather Forecast program is starting *****")                               # Tell the world we are starting
-print()
-start_time = time.time()
-
 # Constants
 OWM_API_URL = "https://api.openweathermap.org/data/2.5/onecall"                            # openweathermap api endpoint
-
 HOURS = 48                                                              # Number of hours we produce hourly forecast for
 DAYS = 8                                                                     # Number of days produce daily forecast for
 SYSTEM_TIME_UTC_OFFSET = 3600        # System time is CET which is one hour ahead of UTC (value is expressed in seconds)
+
+# Adjust SYSTEM_TIME_UTC_OFFSET to cater for summer time if necessary
+system_time = time.localtime()                                                              # System time is CET or CEST
+if system_time.tm_isdst != 0:                                                            # Summertime (DST) is in effect
+    SYSTEM_TIME_UTC_OFFSET = SYSTEM_TIME_UTC_OFFSET + 3600          # Increase offset by one hour (expressed in seconds)
+
+# Tell the world what we are about to start
+print()                                                                                   # blank line before any output
+print("***** Weather Forecast program is starting *****")                               # Tell the world we are starting
+print()
+
+# Record and report start time
+start_time = time.time() + SYSTEM_TIME_UTC_OFFSET
+print("Start time:  ", time.strftime("%H:%M:%S", time.gmtime(start_time)))
 
 # Get target locations
 with open("locations_data.json") as f:
@@ -85,11 +97,6 @@ with open("locations_data.json") as f:
 # Get openweathermap account id
 with open("api_key.txt", "r") as f:
     api_key = f.read()
-
-# Detect and cater for summer time
-system_time = time.localtime()                                                              # System time is CET or CEST
-if system_time.tm_isdst != 0:                                                               # Summertime (DST) in effect
-    SYSTEM_TIME_UTC_OFFSET = SYSTEM_TIME_UTC_OFFSET + 3600          # Increase offset by one hour (expressed in seconds)
 
 # Create prefix for output file names (file names will be YYYY_MM_DD_location_frequency_Forecast.txt)
 today = date.today()                                                              # Today's date (for use in file names)
@@ -156,7 +163,7 @@ for location in locations:
 
             # Update report summary if necessary
             if int(api_data["hourly"][i]["weather"][0]["id"]) < 700:   # Below 700 indicates rain (or snow) of some type
-                rain_or_snow_predicted = True                     # We've changed our mind:  precipitation now predicted
+                rain_or_snow_predicted = True                      # We've changed our mind: precipitation now predicted
 
             # If necessary, adjust minimum and maxim temperatures for summary
             if api_data["hourly"][i]["temp"] < min_temp:                         # If there is a new minimum temperature
@@ -223,14 +230,18 @@ for location in locations:
             f.write("\n")                                                                    # New line to leave a space
 
 # We have processed both hourly and daily reports for each location, ergo we have done our job.  Let's tell the world
+
+# Record and report finish time
+finish_time = time.time() + SYSTEM_TIME_UTC_OFFSET
+print("Finish time: ", time.strftime("%H:%M:%S", time.gmtime(finish_time)))
+
+# Tell the world how long it took
+elapsed_time = finish_time - start_time
+print("Elapsed time: ", str(elapsed_time), " seconds")
+
 print()                                                                                     # Blank line before good-bye
 print("***** Weather Forecast program has finished *****")                       # Tell the world we've finished our job
 print()
-
-# Tell the world how long it took
-finish_time = time.time()
-elapsed_time = finish_time - start_time
-print("Elapsed time: ", time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 
 # Close the terminal window
 x = input("Press ENTER to close the terminal window ")          # Keep the terminal window open until the user closes it
