@@ -8,8 +8,8 @@ Description        Generates an hourly weather forecast for the next 48 hours an
 Background         Inspired by the Day 35 exercise in Doctor Angela Yu's excellent Python course "100 Days of Code -
                    The Complete Python Pro Bootcamp for 2021", which is available on www.udemy.com.  The difference
                    between this program and the course exercise is that this program produces daily and hourly weather
-                   reports for multiple locations, whereas the course exercise operates on a single location, sending 
-                   an SMS alert advising if rain or snow is predicted within the next twelve hours.
+                   reports for multiple locations, whereas the course exercise operates on a single location and merely
+                   sends an SMS alert advising if rain or snow is predicted within the next twelve hours.
 
 Author             Max Parry
 
@@ -22,37 +22,38 @@ Notes              The forecast data is retrieved from the website www.openweath
                    System time is in CET (CEST when summer time / daylight saving time is in effect);  All output dates 
                    and times are in the local time of the location being reported on.  Comments and variable names
                    in the program use the term "location time" when referring to the local time of the location being 
-                   processed and "system time" when referring to the time of the computer clock.  N.B. UTC does NOT 
-                   change when Summer Time is in effect.  Summer Time is reflected in timezone_offset returned by the 
-                   api.
+                   processed and "system time" when referring to the time of the computer clock.  Summer Time is 
+                   reflected in timezone_offset returned by the api.  N.B. UTC does NOT change when Summer Time is in 
+                   effect.
 
-Portability and    The program was written for the author's personal use.  It uses the author's openweathermap account,
-Deployment         relies on system time being in the author's time zone (CET/CEST) and reports on locations selected by 
+Portability and    The program was written for the author's personal use.  It relies on system time being in the 
+                   author's time zone (CET/CEST) and reports on locations selected by 
                    the author.
 
                    Users other than the author should address these points:
 
-                       1) An openweathermap.org api account is required.  The api key of the account should be stored 
-                          in a text file named "api_key.txt" in the same folder as the source code file "main.py"
+                       1) An openweathermap.org api account is required.  The openweaathermap url and the api key of the 
+                          account should be stored in a json file named "api_data.json" in the same folder as the source
+                          code file "main.py"
 
                        2) The location(s) to be reported on should be detailed in a text file "location_data.json" in
                           the same folder as the source code file "main.py"
 
                        3) The variable SYSTEM_TIME_UTC_OFFSET should contain the difference between system time and UTC
-                          in seconds
+                          in seconds (ignoring summer time, which is catered for in the program logic)
 
 Amendment History  15 March 2021     Wind speed reported in kilometres per hour (kph) rather than metres per second
                    16 March 2021     Index j changed to i in "for j in range(0, HOURS)" and "for j in range(0, DAYS)"
                    29 March 2021     Handling of summer time (DST) simplified by using tm_isdst
                    30 March 2021     The user id for the openweathermap.org account moved from the source code to the 
                                      file "api_key.txt" and containing variable name changed from API_ID to api_key
-                    3 May 2021       Kesten added to locations()
+                    3 May 2021       Kesten added to locations reported on
                     4 May 2021       Tuple LOCATIONS changed to a list and renamed locations as a precursor to holding
                                      location data in a file
                     6 May 2021       Daily report output amended to put prevailing conditions and wind speed on the same
-                                     line, thus enabling report to fit on a single page
-                   20 May 2021       Data of the location(s) moved to an external json file from where it is loaded into
-                                     the list locations
+                                     line, thus enabling report to fit on a single A4 page
+                   20 May 2021       Locations data moved to an external json file from where it is loaded into the list
+                                     locations
                    21 May 2021       Comments tidied
                     1 June 2021      File name addedd to Description comment
                     6 June 2021      Elapsed execution time reported
@@ -61,7 +62,14 @@ Amendment History  15 March 2021     Wind speed reported in kilometres per hour 
                                      moved to immediately after initial assignment of constants
                     3 October 2021   Background comments improved
                     6 October 2021   Background comments improved again
-                   15 October 2021   Start and finish time reported and precision of reported elapsed time amended
+                   15 October 2021   Start and finish time reported in addition to execution time
+                   28 October 2021   Elapsed time rounded to two decimal places
+                   31 October 2021   API key moved to an external json file (api_data.json) from where it is loaded into 
+                                     a variable
+                    2 November 2021  Comments improved
+                   28 November 2021  Spelling correction in 28 October comment
+                   15 March 2025     OPENWEATHERMAP.ORG version number changed from 2.5 to 3.0 in OWM_API_URL
+                   17 March 2025     owm_api_url moved from coded constant to the file api_data.json
 
 ====================================================================================================================="""
 import requests
@@ -70,7 +78,6 @@ import time
 import json
 
 # Constants
-OWM_API_URL = "https://api.openweathermap.org/data/2.5/onecall"                            # openweathermap api endpoint
 HOURS = 48                                                              # Number of hours we produce hourly forecast for
 DAYS = 8                                                                     # Number of days produce daily forecast for
 SYSTEM_TIME_UTC_OFFSET = 3600        # System time is CET which is one hour ahead of UTC (value is expressed in seconds)
@@ -78,7 +85,7 @@ SYSTEM_TIME_UTC_OFFSET = 3600        # System time is CET which is one hour ahea
 # Adjust SYSTEM_TIME_UTC_OFFSET to cater for summer time if necessary
 system_time = time.localtime()                                                              # System time is CET or CEST
 if system_time.tm_isdst != 0:                                                            # Summertime (DST) is in effect
-    SYSTEM_TIME_UTC_OFFSET = SYSTEM_TIME_UTC_OFFSET + 3600          # Increase offset by one hour (expressed in seconds)
+    SYSTEM_TIME_UTC_OFFSET = SYSTEM_TIME_UTC_OFFSET + 3600                                 # Increase offset by one hour
 
 # Tell the world what we are about to start
 print()                                                                                   # blank line before any output
@@ -89,14 +96,15 @@ print()
 start_time = time.time() + SYSTEM_TIME_UTC_OFFSET
 print("Start time:  ", time.strftime("%H:%M:%S", time.gmtime(start_time)))
 
+# Get openweathermap account id
+with open("api_data.json") as f:
+    api_id = json.load(f)
+    # print(api_id)         # To export the api_id data for viewing in a json viewer we will need to uncomment this line
+
 # Get target locations
 with open("locations_data.json") as f:
     locations = json.load(f)                           # We can view locations in a json viewer e.g. jsonviewer.stack.hu
     # print(locations)   # To export the locations data for viewing in a json viewer we will need to uncomment this line
-
-# Get openweathermap account id
-with open("api_key.txt", "r") as f:
-    api_key = f.read()
 
 # Create prefix for output file names (file names will be YYYY_MM_DD_location_frequency_Forecast.txt)
 today = date.today()                                                              # Today's date (for use in file names)
@@ -113,9 +121,10 @@ for location in locations:
         "exclude": "current,minutely,alerts",               # We are only interested in hourly and daily data and alerts
         "units": "metric",
         "lang": location["Language"],
-        "appid": api_key
+        "appid": api_id["api_key"]
     }
-    response = requests.get(OWM_API_URL, params=api_parameters)                                             # Invoke api
+    response = requests.get(api_id["owm_api_url"], params=api_parameters)                           
+    # Invoke api
     response.raise_for_status()                                                                   # Handle any API error
     api_data = response.json()                          # We can view api_data in a json viewer e.g. jsonviewer.stack.hu
     # print(api_data)          # To export the api data for viewing in a json viewer we will need to uncomment this line
@@ -229,16 +238,18 @@ for location in locations:
 
             f.write("\n")                                                                    # New line to leave a space
 
-# We have processed both hourly and daily reports for each location, ergo we have done our job.  Let's tell the world
+# We have processed both hourly and daily reports for each location, ergo we have done our job.  
+# Report finsh time and total execution time, tell world we've finished and close the terminal window
 
 # Record and report finish time
 finish_time = time.time() + SYSTEM_TIME_UTC_OFFSET
 print("Finish time: ", time.strftime("%H:%M:%S", time.gmtime(finish_time)))
 
 # Tell the world how long it took
-elapsed_time = finish_time - start_time
+elapsed_time = round(finish_time - start_time, 2)
 print("Elapsed time: ", str(elapsed_time), " seconds")
 
+# Tell the world we've finished our job
 print()                                                                                     # Blank line before good-bye
 print("***** Weather Forecast program has finished *****")                       # Tell the world we've finished our job
 print()
