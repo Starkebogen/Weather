@@ -2,8 +2,9 @@
 
 Title              Weather Forecast
 
-Description        Generates an hourly weather forecast for the next 48 hours and a daily summary the next 7 days for
-                   each of the locations specified in the file "locations_data.json".
+Description        Generates an hourly weather forecast for most recent hour and the following 47 hours and a daily 
+                   summary for today and the following 7 days for each of the locations specified in the file 
+                   "locations_data.json".
 
 Background         Inspired by the Day 35 exercise in Doctor Angela Yu's excellent Python course "100 Days of Code -
                    The Complete Python Pro Bootcamp for 2021", which is available on www.udemy.com.  The difference
@@ -26,9 +27,9 @@ Notes              The forecast data is retrieved from the website www.openweath
                    reflected in timezone_offset returned by the api.  N.B. UTC does NOT change when Summer Time is in 
                    effect.
 
-Portability and    The program was written for the author's personal use.  It relies on system time being in the 
-                   author's time zone (CET/CEST) and reports on locations selected by 
-                   the author.
+Portability        The program was written for the author's personal use.  It relies on system time being in the 
+                   author's time zone (CET/CEST) and reports on locations selected in the text file "location_data.json"
+                   which MUST be in the same folder as the Python source code.
 
                    Users other than the author should address these points:
 
@@ -70,6 +71,7 @@ Amendment History  15 March 2021     Wind speed reported in kilometres per hour 
                    28 November 2021  Spelling correction in 28 October comment
                    15 March 2025     OPENWEATHERMAP.ORG version number changed from 2.5 to 3.0 in OWM_API_URL
                    17 March 2025     owm_api_url moved from coded constant to the file api_data.json
+                   6 April 2026      Some comments improved
 
 ====================================================================================================================="""
 import requests
